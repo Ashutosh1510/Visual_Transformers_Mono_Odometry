@@ -1,97 +1,67 @@
-# Focus On Depth - A single DPT encoder for AutoFocus application and Dense Prediction Tasks
+# Visual-Transformers-Mono-Odometry
+In this project, we aim to develop a transformer-based model architecture for visual
+odometry(VO) that can accurately estimate the position and orientation of a robot using
+images as input. To achieve this, we will first collect the dataset and preprocess the
+image sequences and then implement and train the proposed model architecture.
+The performance of the model will be evaluated and based on the setbacks of the
+pre-trained model, we will fine-tune it in other scenes. This deep-learning approach
+to visual odometry improves the accuracy and reliability of the systems across
+various applications.
 
-![pytorch](https://img.shields.io/badge/pytorch-v1.10-green.svg?style=plastic)
-![wandb](https://img.shields.io/badge/wandb-v0.12.10-blue.svg?style=plastic)
-![scipy](https://img.shields.io/badge/scipy-v1.7.3-orange.svg?style=plastic)
+## Team Members
+1. Hritvik Choudhari
+2. Sumedh Reddy Koppula
+3. Ashutosh Reddy Atimyala
+4. Mohammed Maaruf Vazifdar
+5. Venkata Sairam Polina
 
-<!-- ![presentation](https://i.ibb.co/rbySmMc/DL-FOD-POSTER-1.png) -->
+## Approach
+In our research, we aim to address the challenge of scale recovery in monocular systems. To do so, we will leverage the depth map estimated by a deep learning technique, specifically a transformer-based network.
 
 <p align="center">
-  <img src="images/pull_figure.png"/>
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/dpt-vo.png" width="800" height="400"/>
 </p>
 
-<!-- > Input image taken from: https://koboguide.com/how-to-improve-portrait-photography/ -->
+## Architecture
+#### Part 1 - Dense Prediction
+- Embedded Phase: We begin by extracting non-overlapping patches from the input image utilizing a ResNeXT101 feature extractor to generate tokens.
+- Processing Tokens for feeding into Transformers: These tokens are enhanced with positional and readout embeddings and routed through several transformer stages. 
+- Reassemble Phase: Tokens from several stages are reassembled into an image-like representation at many resolutions and merged using fusion modules, which build a fine-grained prediction gradually. 
+- Fusing Feature Maps: The feature maps are upsampled using residual convolutional units in the fusion blocks. Our architecture leverages fine tuned modified version of hybrid Dense Prediction Transformer (DPT) model on KITTI odometry dataset.
 
-## Abstract
+#### Part 2 - Visual Odometry using scale estimation
+- Feature detection and matching: Used Accelerated Segment Test (FAST) corner detection algorithm for feature detection.Used iterative Lucas-Kanade method for feature Matching.
+- Scale: We estimated the relative scale in MVO by using the depth from module 1 and aligning it with the triangulated depth to generate the scale, which is obtained by a RANSAC regressor with a depth ratio vector as input.
 
-<!-- Recent works have shown that in the real world, humans
-rely on the image obtained by their left and right eyes in order to estimate depths of surrounding objects. Thus, -->
-> Depth estimation is a classic task in computer vision, which is of
-great significance for many applications such as augmented
-reality, target tracking and autonomous driving. We firstly
-summarize the deep learning models for monocular depth
-estimation. Secondly, we will implement a recent Vision
-Transformers based architecture for this task. We will seek
-to improve it by adding a segmentation head in order to
-perform multi-task learning using a customly built dataset.
-Thirdly, we will implement our model for in-the-wild images (i.e. without control on the environment, the distance
-and size of objects of interests, and their physical properties
-(rotation, dynamics, etc.)) for Auto-focus application on
-humans and will give qualitative comparison across other
-methods.
+ViT-DPT architecture
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/architecture.png" width="800" height="300"/>
+</p>
 
-## :zap: New! Web demo
+VO result plot
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/plot_02.png" width="500" height="400"/>
+</p>
 
-You can check the webdemo hosted on Hugging Face and powered by Gradio, [here](https://huggingface.co/spaces/ybelkada/FocusOnDepth).
+## Results
+Overall, our visual odometry model achieved good accuracy on the KITTI dataset, with low errors on all evaluation metrics. This demonstrates the effectiveness of our approach and the importance of accurate depth maps for visual odometry estimation.
 
-## :pushpin: Requirements
+- Depth estimation using DPT
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/520.png" width="600" height="200"/>
+</p>
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/521.png" width="600" height="200"/>
+</p>
 
-Run: ``` pip install -r requirements.txt ```
+- Visual Odometry metrices obtained
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/table22.png" width="500" height="400"/>
+</p>
 
-## :rocket: Running the model
-
-You can first download one of the models from the model zoo:
-
-### :bank: Model zoo
-
-Get the links of the following models:
-
-+ [```FocusOnDepth_vit_base_patch16_384.p```](https://drive.google.com/file/d/1Q7I777FW_dz5p5UlMsD6aktWQ1eyR1vN/view?usp=sharing)
-+ Other models coming soon...
-
-And put the ```.p``` file into the directory ```models/```. After that, you need to update the ```config.json``` ([Tutorial here](https://github.com/antocad/FocusOnDepth/wiki/Config-Wiki)) according to the pre-trained model you have chosen to run the predictions (this means that if you load a depth-only model, then you have to set ```type``` to ```depth``` for example ...).
-
-### :dart: Run a prediction
-
-Put your input images (that have to be ```.png``` or ```.jpg```) into the ```input/``` folder. Then, just run ```python run.py``` and you should get the depth maps as well as the segmentation masks in the ```output/``` folder.
-
-
-## :hammer: Training
-
-### :wrench: Build the dataset
-
-Our model is trained on a combination of
-+ [inria movie 3d dataset](https://www.di.ens.fr/willow/research/stereoseg/) | [view on Kaggle](https://www.kaggle.com/antocad/inria-fod/)
-+ [NYU2 Dataset](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html) | [view on Kaggle](https://www.kaggle.com/antocad/nyuv2-fod)
-+ [PoseTrack](https://posetrack.net/) | [view on Kaggle](https://www.kaggle.com/antocad/posetrack-fod)
-
-### :pencil: Configure ```config.json```
-
-Please refer to our [config wiki](https://github.com/antocad/FocusOnDepth/wiki/Config-Wiki) to understand how to modify the config file to run a training.
-
-### :nut_and_bolt: Run the training script
-After that, you can simply run the training script: ```python train.py```
-
-
-## :scroll: Citations
-
-Our work is based on the work from Ranflt et al. please do not forget to cite their work! :)
-You can also check our [report](https://github.com/antocad/FocusOnDepth/blob/master/FocusOnDepth.pdf) if you need more details.
-
-```
-@article{DPT,
-  author    = {Ren{\'{e}} Ranftl and
-               Alexey Bochkovskiy and
-               Vladlen Koltun},
-  title     = {Vision Transformers for Dense Prediction},
-  journal   = {CoRR},
-  volume    = {abs/2103.13413},
-  year      = {2021},
-  url       = {https://arxiv.org/abs/2103.13413},
-  eprinttype = {arXiv},
-  eprint    = {2103.13413},
-  timestamp = {Wed, 07 Apr 2021 15:31:46 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-2103-13413.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
-}
-```
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/trans_err_02_page-0001.jpg" width="500" height="400"/>
+</p>
+<p align="center">
+<img src="https://github.com/Hritvik-Choudhari0411/visual-transformers-mono-odometry/blob/main/Final%20project%20results/rot_err_02_page-0001.jpg" width="500" height="400"/>
+</p>
